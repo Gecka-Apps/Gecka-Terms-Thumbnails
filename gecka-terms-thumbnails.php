@@ -532,8 +532,9 @@ th#image {width: 55px}
 				<?php the_term_thumbnail($term_id, $taxonomy, 'admin-thumbnail', array('style'=>'float:left; border: 1px solid #ccc; margin-right: 10px; padding: 3px; ')); ?>
 				
 				<input type="button" id="delete-thumb-button" value="Delete the current image" class="button-secondary action" style="width: auto">
+				<br><br>
 			</div>
-			<br><br>
+			
 			<?php endif; ?>
 			<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo $max_upload_size ?>" />
 			<input type="file" id="image" name="image" style="width: 97%;" class="button-secondary action"><br />
@@ -679,12 +680,12 @@ th#image {width: 55px}
 	public function ajax_delete_term_image () {
 
 		$term_id = isset($_POST['term_id']) && (int) $_POST['term_id'] ? (int) $_POST['term_id'] : '';
-		var_dump(wp_verify_nonce( $_POST['_nonce'], 'delete_term_image'));
+		
 		if( ! $term_id || ! wp_verify_nonce( $_POST['_nonce'], 'delete_term_image') ) die(0);
 		
 		self::remove_term_image($term_id);
 		
-		die(1);		
+		die('1');		
 	}	
 	
 	/**
