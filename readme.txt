@@ -32,5 +32,8 @@ Want to contribute? That plugin is on <a href="https://github.com/Gecka-Apps/Gec
 
 == Changelog ==
 
+= 1.0-beta2 =
+* Fix activation hook
+
 = 1.0-beta1 =
 * First release.
