@@ -7,8 +7,8 @@ Version: 1.0-beta1
 Author: Gecka Apps
 Author URI: http://gecka.nc
 Licence: GPL
-Requires at least: 3.1
-Tested up to: 3.1.4
+Requires at least: 3.0
+Tested up to: 3.2
 */
 
 /*  Copyright 2011  Gecka  (email : contact@gecka.nc)
@@ -373,6 +373,32 @@ class Gecka_Terms_Thumbnails {
 	/***************************************************************************
      * Actions and filters hooks
      **************************************************************************/
+	public function activation_hook () {
+	    
+		if (version_compare(PHP_VERSION, '5.0.0', '<')) {
+	        deactivate_plugins( basename(dirname(__FILE__)) . '/' . basename(__FILE__) ); // Deactivate ourself
+	        wp_die("Sorry, the Gecka Terms Ordering plugin requires PHP 5 or higher.");
+	    }
+	    
+	    global $wpdb;
+	    
+	    $collate = '';
+	    if($wpdb->supports_collation()) {
+			if(!empty($wpdb->charset)) $collate = "DEFAULT CHARACTER SET $wpdb->charset";
+			if(!empty($wpdb->collate)) $collate .= " COLLATE $wpdb->collate";
+	    }
+	    
+	    $sql = "CREATE TABLE IF NOT EXISTS ". $wpdb->prefix . "termmeta" ." (
+	            `meta_id` bigint(20) unsigned NOT NULL auto_increment,
+	            `term_id` bigint(20) unsigned NOT NULL default '0',
+	            `meta_key` varchar(255) default NULL,
+	            `meta_value` longtext,
+	            PRIMARY KEY (meta_id),
+	            KEY term_id (term_id),
+	            KEY meta_key (meta_key) ) $collate;";
+	    $wpdb->query($sql);
+	    
+	}	
 	
 	public function plugins_loaded () {
 		self::$taxonomies = apply_filters( 'terms-thumbnails-default-sizes', self::$taxonomies );
@@ -753,6 +779,17 @@ if( ! function_exists('get_the_term_thumbnail') ) {
 if( ! function_exists('get_term_thumbnail') ) {
 	function get_term_thumbnail ($term_id, $size) {
 		return Gecka_Terms_Thumbnails::get_term_thumbnail($term_id, $size);	
+	}
+}
+
+if ( ! function_exists('wp_list_terms') ) {
+	
+	function wp_list_terms ( $args ) {
+		
+		wp_parse_args($args);
+		if( ! isset($args['walker']) || ! is_a( $args['walker'], 'Walker') ) $args['walker'] = new Walker_Term();
+		
+		return wp_list_categories( $args );
 	}
 }
 
