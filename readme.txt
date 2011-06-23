@@ -3,7 +3,7 @@ Contributors: Gecka Apps
 Tags: term, terms, category, categories, term image, category image, categories images, taxonomy image, taxoomies images, categories thumbnails, thumbnail
 Requires at least: 3.0
 Tested up to: 3.2
-Stable tag: 1.0-beta1
+Stable tag: 1.0-beta2
 Manage tumbnails for categories, tags or any other taxonomy's terms of your Wordpress website.
 
 == Description ==
