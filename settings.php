@@ -18,6 +18,8 @@ class Gecka_Terms_Thumbnails_Settings {
 										'term_medium_size_w' => 150,
 									 	'term_medium_size_h' => 150,
 										'term_medium_crop' => 0,
+			
+										'use_wp_media' => false
 									 );
 	
 	private function __construct() {

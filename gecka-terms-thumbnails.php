@@ -33,15 +33,36 @@ $gecka_terms_thumbnails = Gecka_Terms_Thumbnails::instance();
 
 class Gecka_Terms_Thumbnails {
 
+	/**
+	 * Singleton intance
+	 * @var Gecka_Terms_Thumbnails
+	 */
 	private static $instance;
 	
+	/**
+	 * Uri to the plugin folder
+	 * @var string
+	 */
 	private static $plugin_url;
+	
+	/**
+	 * Absolute path to the plugin folder
+	 * @var string
+	 */
     private static $plugin_path;
 	
 	private static $taxonomies  = array('category');
 	
-	private static $thumbnails_sizes;
+	/**
+	 * Thumbnails sizes
+	 * @var array
+	 */
+	private static $thumbnails_sizes = array();
 
+	/**
+	 * Plugin settings
+	 * @var Gecka_Terms_Thumbnails_Settings
+	 */
 	public static $settings;
 	
 	private $error;
@@ -54,6 +75,9 @@ class Gecka_Terms_Thumbnails {
 								 'gif' => 'image/gif',
 								 'png' => 'image/png',);
 	
+	/**
+	 * Private constructor (singleton)
+	 */
 	private function __construct() {
     	
     	self::$plugin_url 	= plugins_url('', __FILE__);
@@ -63,11 +87,11 @@ class Gecka_Terms_Thumbnails {
     	self::$settings = Gecka_Terms_Thumbnails_Settings::instance();
     	
     	// add default thumbnails sizes
-    	self::add_image_size('admin-thumbnail', 50, 50, true);    	
-    	self::add_image_size('thumbnail', self::$settings->term_thumbnail_size_w, self::$settings->term_thumbnail_size_h, self::$settings->term_thumbnail_crop);    	
-    	self::add_image_size('medium', self::$settings->term_medium_size_w, self::$settings->term_medium_size_h, self::$settings->term_medium_crop);    	
-
-    	register_activation_hook( __FILE__, array( $this, 'activation_hook' ) );
+	    self::add_image_size('admin-thumbnail', 50, 50, true);    	
+	    self::add_image_size('thumbnail', self::$settings->term_thumbnail_size_w, self::$settings->term_thumbnail_size_h, self::$settings->term_thumbnail_crop);    	
+	    self::add_image_size('medium', self::$settings->term_medium_size_w, self::$settings->term_medium_size_h, self::$settings->term_medium_crop);    	
+		
+		register_activation_hook( __FILE__, array( $this, 'activation_hook' ) );
     	
     	add_action( 'plugins_loaded', array($this, 'plugins_loaded'), 5 );
     	add_action( 'after_setup_theme', array($this, 'after_setup_theme'), 5 );
@@ -80,26 +104,29 @@ class Gecka_Terms_Thumbnails {
     	add_action( 'admin_init', array($this, 'admin_init') );
     	
     }
-
-    /***************************************************************************
-     * Static functions
-     **************************************************************************/
-    
-	public static function instance () {
-
-    	if ( ! isset( self::$instance ) ) {
-            $class_name = __CLASS__;
-            self::$instance = new $class_name;
-        }
-
-        return self::$instance;
-        
-    }
     
     /**
-     * Manage taxonomies terms image support
+     * Returns the singleton instance
+     * @return Gecka_Terms_Thumbnails
      */
+    public static function instance () {
     
+    	if ( ! isset( self::$instance ) ) {
+    		$class_name = __CLASS__;
+    		self::$instance = new $class_name;
+    	}
+    
+    	return self::$instance;
+    
+    }
+
+	/* =Manages taxonomies terms image support
+	----------------------------------------------- */
+    
+    /**
+     * Adds thumbnail support for the specified taxonomy
+     * @param string $taxonomy
+     */
     public static function add_taxonomy_support( $taxonomy ) {
     
     	$taxonomies = (array)$taxonomy ;
@@ -107,6 +134,10 @@ class Gecka_Terms_Thumbnails {
     	
     }
     
+    /**
+     * Removes thumbnail support for the specified taxonomy
+     * @param string $taxonomy
+     */
     public static function remove_taxonomy_support( $taxonomy ) {
 		
     	$key = array_search ( $taxonomy, self::$taxonomies );
@@ -114,6 +145,11 @@ class Gecka_Terms_Thumbnails {
     	
     }
     
+    /**
+     * Return true if the specified taxonomy has terms thumbnails support
+     * @param string $taxonomy
+     * @return bool
+     */
 	public static function has_support ( $taxonomy ) {
 		
 		if( in_array($taxonomy, self::$taxonomies) ) return true;
@@ -121,37 +157,65 @@ class Gecka_Terms_Thumbnails {
 		
 	}
 	
-	public static function has_term_thumbnail ( $term_id, $size=null ) {
-		
-		$image_infos = self::get_term_image_infos( $term_id );
-		
-		if( empty( $image_infos ) ) return  false;
-		elseif( ! $size ) return true;
-		
-		if( isset ( $image_infos['thumbnails'][$size] ) ) return true;
-		
-		return false;
-	}
+	/* =Manages terms thumbnails sizes
+	 ----------------------------------------------- */
 	
 	/**
-	 * Registers a new image size
+	 * Registers a new term thumbnail size
+	 * 
+	 * @param string $name
+	 * @param int $width
+	 * @param int $height
+	 * @param bool $crop
 	 */
 	public static function add_image_size( $name, $width = 0, $height = 0, $crop = false ) {
 		self::$thumbnails_sizes[$name] = array( 'width' => absint( $width ), 'height' => absint( $height ), 'crop' => (bool) $crop );
 	}
 	
 	/**
-	 * Registers an image size for the taxonomy thumbnail
+	 * Sets the default thumbnail size
+	 * @param int $width
+	 * @param int  $height
+	 * @param bool $crop
 	 */
 	public static function set_thumbnail( $width = 0, $height = 0, $crop = false ) {
 		self::add_image_size( 'thumbnail', $width, $height, $crop );
 	}
 	
+	
+	/* =Static functions to display terms thumbnails
+	 ----------------------------------------------- */
+	
+	/**
+	 * Returns true if the specified term has a thumbnail image for the specified category and size
+	 *
+	 * @param int $term_id
+	 * @param string $size
+	 */
+	public static function has_term_thumbnail ( $term_id, $taxonomy, $size=null ) {
+	
+		$image_infos = self::get_term_image_infos( $term_id, $taxonomy );
+	
+		if( empty( $image_infos ) ) return  false;
+		elseif( ! $size ) return true;
+	
+		if( isset ( $image_infos['thumbnails'][$size] ) ) return true;
+	
+		return false;
+	}	
+	
+	/**
+	 * Returns the specified term's thumbnail's HTML code for the specified taxonomy and size
+	 * @param int $term_id
+	 * @param string $taxonomy
+	 * @param string  $size
+	 * @param array $attr
+	 */
 	public static function get_the_term_thumbnail( $term_id, $taxonomy, $size = 'thumbnail', $attr = '' ) {
 		
 		$size = apply_filters( 'term_thumbnail_size', $size, $term_id, $taxonomy );
 		
-		$image = self::get_term_thumbnail($term_id, $size);
+		$image = self::get_term_thumbnail($term_id, $taxonomy, $size);
 		
 		$term = get_term($term_id, $taxonomy);
 		
@@ -187,9 +251,15 @@ class Gecka_Terms_Thumbnails {
 		return apply_filters( 'term_thumbnail_html', $html, $term_id, $taxonomy, $image, $size, $attr );
 	}
 	
-	public static function get_term_thumbnail ( $term_id, $size = null ) {
+	/**
+	 * Returns the specified term's thumbnail for the specified taxonomy and size
+	 * @param int $term_id
+	 * @param string $taxonomy
+	 * @param string  $size
+	 */
+	public static function get_term_thumbnail ( $term_id, $taxonomy, $size = null ) {
 		
-		$infos = self::get_term_image_infos($term_id);
+		$infos = self::get_term_image_infos($term_id, $taxonomy);
 		if(!$infos) return false;
 		
 		if( ! $size  ) return array($infos['url'], $infos['infos'][0], $infos['infos'][1]);
@@ -211,65 +281,103 @@ class Gecka_Terms_Thumbnails {
 	 * Manage terms image meta
 	 */
 	
-	public static function get_term_image_infos ( $term_id) {
+	/**
+	 * Return a term's thumbnail meta data for the specified taxonomy
+	 * @param int $term_id
+	 * @param string $taxonomy
+	 * @return array
+	 */
+	public static function get_term_image_infos ( $term_id, $taxonomy) {
 		
-		return get_metadata( 'term', $term_id, 'image', true);
+		$meta_data = false;
 		
+		if( $taxonomy ) {
+			$meta_data = get_metadata( 'term', $term_id, 'image-' . $taxonomy, true);
+		}
+		
+		// compatibility with beta1
+		if( !$meta_data ) {
+			$meta_data = get_metadata( 'term', $term_id, 'image', true);
+		}
+		
+		return $meta_data;
 	}
 	
-	public static function update_term_image_infos ( $term_id, $infos ) {
-		
-		return  update_metadata( 'term', $term_id, 'image', $infos );
-		
-	}
+	/* =Manages the terms images metadata
+	 ----------------------------------------------- */
 	
-	public static function delete_term_image_infos ( $term_id ) {
+	/**
+	 * Updates a term thumbnail metadata
+	 * @param int $term_id
+	 * @param sttring $taxonomy
+	 * @param array $infos
+	 * @return boolean
+	 */
+	public static function update_term_image_infos ( $term_id, $taxonomy, $infos ) {
 		
-		return delete_metadata( 'term', $term_id, 'image' );
-
+		// compatibility with beta1
+		if( get_metadata( 'term', $term_id, 'image', true) ) {
+			delete_metadata( 'term', $term_id, 'image' );
+		}
+		
+		return  update_metadata( 'term', $term_id, 'image-' . $taxonomy, $infos );
+		
 	}
 	
 	/**
-	 * Terms images and thumbnails path and url
+	 * Deletes a term's thumbnail metadata
+	 * @param int $term_id
+	 * @param string $taxonomy
+	 * @return boolean
 	 */
+	public static function delete_term_image_infos ( $term_id, $taxonomy ) {
+		
+		// compatibility with beta1
+		if( get_metadata( 'term', $term_id, 'image-' . $taxonomy, true) ) {
+			return delete_metadata( 'term', $term_id, 'image-' . $taxonomy );
+		}
+		
+		// compatibility with beta1
+		if( get_metadata( 'term', $term_id, 'image', true) ) {
+			return delete_metadata( 'term', $term_id, 'image' );
+		}
+		
+		return delete_metadata( 'term', $term_id, 'image-' . $taxonomy );
+
+	}
 	
+	/* =Terms images and thumbnails path and url
+	 ----------------------------------------------- */
+	
+	/**
+	 * Returns the absolute path to the thumbnails folder
+	 * @return string
+	 */
 	public static function images_dir () {
 		$upload_dir_infos = wp_upload_dir();
 		return $upload_dir_infos['basedir'] . '/terms-images';
 	}
 	
+	/**
+	 * Returns the URI to the thumbnails folder
+	 * @return string
+	 */
 	public static function images_url () {
 		$upload_dir_infos = wp_upload_dir();
 		return $upload_dir_infos['baseurl'] . '/terms-images';
 	}
 	
-	/**
-	 * Make a directory
-	 *
-	 * @param string $taxonomy optional category name to create a taxnonomy directory
-	 */
-	public static function images_mkdir ($taxonomy='') {
-		
-		global $wp_filesystem;
-		WP_Filesystem();
-		
-		$dir = self::images_dir() . ($taxonomy ? '/' . $taxonomy : '');
-		
-		if ( ! wp_mkdir_p($dir) && ! is_dir($dir) ) // Only check to see if the Dir exists upon creation failure. Less I/O this way.
-			wp_die(__('Could not create directory.'));
-				
-		return $dir;
-	}
+	/* =Static functions to manage terms images
+	 ----------------------------------------------- */
 	
 	/**
 	 * Generate a term's thumbnails
-	 *
 	 * @param int $term_id
 	 * @param string $taxonomy
 	 */
 	public static function generate_thumbnails ( $term_id, $taxonomy ) {
 		
-		$infos = self::get_term_image_infos( $term_id );
+		$infos = self::get_term_image_infos( $term_id, $taxonomy );
 		
 		if ( ! $infos ) return;
 		
@@ -277,7 +385,7 @@ class Gecka_Terms_Thumbnails {
 		
 		// removes obsolete thumbnails
 		foreach ( $thumbnails as $name => $size ) {
-			if( ! isset( self::$thumbnails_sizes[$name] ) ) self::remove_term_thumbnail( $name, $term_id );
+			if( ! isset( self::$thumbnails_sizes[$name] ) ) self::remove_term_thumbnail( $name, $term_id, $taxonomy );
 		}
 		
 		// creates all thumbnails images
@@ -298,30 +406,30 @@ class Gecka_Terms_Thumbnails {
 			$infos['thumbnails'][$key] = $file_infos;
 		}
 		
-		self::update_term_image_infos($term_id, $infos);
+		self::update_term_image_infos($term_id, $taxonomy, $infos);
 		
 	}
 	
 	/**
-	 * Remove a term's image (and thumbnails)
-	 * 
+	 * Remove a term's image (and its thumbnails)
 	 * @param int $term_id
+	 * @param string $taxonomy
 	 */
-	public static function remove_term_image ( $term_id ) {
+	public static function remove_term_image ( $term_id, $taxonomy ) {
 		
-		$infos = self::get_term_image_infos( $term_id );
+		$infos = self::get_term_image_infos( $term_id, $taxonomy );
 		
 		if ( !$infos ) return;
 		
 		if( !empty($infos) && isset( $infos['path'] ) ) {
 			
-			if( false === self::remove_term_thumbnails($term_id) ) return false;
+			if( false === self::remove_term_thumbnails($term_id, $taxonomy) ) return false;
 			
 			if( ! @ unlink($infos['path']) && file_exists($infos['path']) ) return false;
 			
 		}
 		
-		self::delete_term_image_infos($term_id);	
+		self::delete_term_image_infos($term_id, $taxonomy);	
 		
 		return true;
 	
@@ -329,32 +437,38 @@ class Gecka_Terms_Thumbnails {
 	
 	/**
 	 * Removes the generated thumbnails of a term
-	 *
 	 * @param int $term_id
 	 * @param string $taxonomy
 	 * @return bool
 	 */
-	public static function remove_term_thumbnails ( $term_id ) {
+	public static function remove_term_thumbnails ( $term_id, $taxonomy ) {
 		
-		$infos = self::get_term_image_infos( $term_id );
+		$infos = self::get_term_image_infos( $term_id, $taxonomy );
 		
 		if ( !$infos ) return;
 		
 		if( empty($infos['thumbnails']) ) return true;
 		
 		foreach ($infos['thumbnails'] as $name => $thumbnail ) {
-			if( false === self::remove_term_thumbnail($name, $term_id) ) return false;
+			if( false === self::remove_term_thumbnail($name, $term_id, $taxonomy) ) return false;
 		}
 		
 		return true;
 	
 	}
 	
-	public static function remove_term_thumbnail ( $thumbnail_name, $term_id ) {
+	/**
+	 * Removes aterm's thumbnail
+	 * @pram string $thumbnail_name
+	 * @param int $term_id
+	 * @param string $taxonomy
+	 * @return bool
+	 */
+	public static function remove_term_thumbnail ( $thumbnail_name, $term_id, $taxonomy ) {
 		
 		if($thumbnail_name == 'admin_thumbnail') return;
 		
-		$infos = self::get_term_image_infos( $term_id );
+		$infos = self::get_term_image_infos( $term_id, $taxonomy );
 		if ( !$infos ) return;
 		
 		if( empty($infos['thumbnails']) || empty($infos['thumbnails'][$thumbnail_name]) ) return true;
@@ -364,22 +478,48 @@ class Gecka_Terms_Thumbnails {
 		if ( file_exists($thumbnail['path'] ) && ! @ unlink($thumbnail['path']) ) return false;
 		unset( $infos['thumbnails'][$thumbnail_name] );
 		
-		self::update_term_image_infos($term_id, $infos);
+		self::update_term_image_infos($term_id, $taxonomy, $infos);
 		
 		return true;
 	
 	}
 	
-	/***************************************************************************
-     * Actions and filters hooks
-     **************************************************************************/
+	/* =Misc static functions
+	----------------------------------------------- */
+	
+	/**
+	 * Make a directory
+	 * @param string $taxonomy optional category name to create a taxnonomy directory
+	 */
+	public static function images_mkdir ($taxonomy='') {
+	
+		global $wp_filesystem;
+		WP_Filesystem();
+	
+		$dir = self::images_dir() . ($taxonomy ? '/' . $taxonomy : '');
+	
+		if ( ! wp_mkdir_p($dir) && ! is_dir($dir) ) // Only check to see if the Dir exists upon creation failure. Less I/O this way.
+			wp_die(__('Could not create directory.'));
+	
+		return $dir;
+	}
+	
+	/* =Action and filter hooks
+	----------------------------------------------- */
+	
+	/**
+	 * Checks PHP version and create the needed database table on plugin activation
+	 */
 	public function activation_hook () {
 	    
+		// checks the PHP version
 		if (version_compare(PHP_VERSION, '5.0.0', '<')) {
 	        deactivate_plugins( basename(dirname(__FILE__)) . '/' . basename(__FILE__) ); // Deactivate ourself
 	        wp_die("Sorry, the Gecka Terms Ordering plugin requires PHP 5 or higher.");
 	    }
 	    
+	    
+	    // creates the needed database table
 	    global $wpdb;
 	    
 	    $collate = '';
@@ -396,45 +536,74 @@ class Gecka_Terms_Thumbnails {
 	            PRIMARY KEY (meta_id),
 	            KEY term_id (term_id),
 	            KEY meta_key (meta_key) ) $collate;";
+	    
 	    $wpdb->query($sql);
 	    
 	}	
 	
+	/**
+	 * Filters default thumbnails sizes and supported taxonomies
+	 * Runs on the plugins_loaded action hook
+	 */
 	public function plugins_loaded () {
 		self::$taxonomies = apply_filters( 'terms-thumbnails-default-sizes', self::$taxonomies );
 		self::$thumbnails_sizes = apply_filters( 'terms-thumbnails-default-sizes', self::$thumbnails_sizes );
 	}
 	
+	/**
+	 * Filters default thumbnails sizes and supported taxonomies
+	 * Runs on the after_setup_theme action hook
+	 */
  	public function after_setup_theme () {
     	self::$taxonomies = apply_filters( 'terms-thumbnails-taxonomies', self::$taxonomies );
     	self::$thumbnails_sizes = apply_filters( 'terms-thumbnails-sizes', self::$thumbnails_sizes );
 	}
     
+	/**
+	 * Sets our table name into wpdb
+	 * Runs on the init and switch_blog action hooks
+	 */
 	public function metadata_wpdbfix () {
-    	
     	global $wpdb;
 	  	$wpdb->termmeta = "{$wpdb->prefix}termmeta";
-	  	
-    }
+	}
     
+	/**
+	 * Filters the default categories widget args
+	 * Run on the widget_categories_args filter hook
+	 * @param array $args
+	 * @return array
+	 */
     public function widget_categories_args ($args) {
     	
+    	// default taxonomy
     	$taxonomy = empty( $args->taxonomy ) ? 'category' : $args->taxonomy;
-		if( ! self::has_support( $taxonomy ) ) return $args;
 		
+    	// the taxonomy hasn't thumbnail support, so we ignore it
+    	if( ! self::has_support( $taxonomy ) ) return $args;
+		
+		// default thumbnail size
 		if( !isset($args['show_thumbnail']) ) $args['show_thumbnail'] = 'thumbnail';
 
+		// our custom walker to add thumbnails
 		$args['walker'] = new Walker_Term();
 		
     	return $args;
     }
     
+    /**
+     * Init the admin
+     * Runs on the admin_init action hook
+     */
 	public function admin_init () {
 		
+		// adds scripts and css
 		add_action ( 'admin_head-edit-tags.php', array($this, 'admin_head'));
 		
+		// show our admin notices
 		add_action ( 'admin_notices', array($this, 'admin_notice') );
 		
+		// adds/removes our errors var to url on redirect
 		add_filter ( 'wp_redirect', array($this, 'wp_redirect') );
 		
 		foreach ( self::$taxonomies as $taxonomy ) {
@@ -462,6 +631,10 @@ class Gecka_Terms_Thumbnails {
 				
 	}
 	
+	/**
+	 * Css and script on the admin terms forms
+	 * Runs on the admin_head-edit-tags.php action hook
+	 */
 	public function admin_head () {
 		
 		if( empty( $_GET['taxonomy'] ) || ! self::has_support( $_GET['taxonomy'] ) ) return;
@@ -477,7 +650,7 @@ class Gecka_Terms_Thumbnails {
 
 		$('#delete-thumb-button').click( 
 			function () {
-				$.post( ajaxurl, {term_id: <?php echo $term_id ?>, action: 'delete_term_image', _nonce: nonce}, function (data) { if(data == '1') $('#term_thumbnail').hide('slow'); }  ); 
+				$.post( ajaxurl, {term_id: <?php echo esc_js($term_id) ?>, taxonomy: '<?php echo esc_js($_GET['taxonomy']) ?>', action: 'delete_term_image', _nonce: nonce}, function (data) { if(data == '1') $('#term_thumbnail').hide('slow'); }  ); 
 			}
 		);
 		
@@ -495,6 +668,10 @@ th#image {width: 55px}
 		
 	}
 	
+	/**
+	 * Shows errors in admin
+	 * Runs on the admin_notices action hook
+	 */
 	public function admin_notice () {
 		
 		if( empty($_GET['term_image_error']) ) return;
@@ -508,6 +685,11 @@ th#image {width: 55px}
 	    	  </div>';
 	}
 	
+	/**
+	 * On wp_redirect, we add/remove our errors var as needed
+	 * @param string $location
+	 * Runs on the wp_redirect filter hook
+	 */
 	public function wp_redirect ($location) {
 		
 		$location = remove_query_arg('term_image_error', $location);
@@ -519,6 +701,11 @@ th#image {width: 55px}
 		return $location;
 	}	
 	
+	/**
+	 * Adds a field to the "Add term" form
+	 * @param string $taxonomy
+	 * Runs on the {$taxonomy}_add_form_fields action hook
+	 */
 	public function add_field ( $taxonomy ) {
 		
 		?>
@@ -530,6 +717,11 @@ th#image {width: 55px}
 		<?php
 	}
 	
+	/**
+	 * Adds a field to the "Edit term" form
+	 * @param string $taxonomy
+	 * Runs on the {$taxonomy}_edit_form_fields action hook
+	 */
 	public function edit_field ( $term, $taxonomy ) {
 		
 		$term_id = $term->term_id;
@@ -550,7 +742,7 @@ th#image {width: 55px}
 		<tr class="form-field">
 			<th scope="row" valign="top"><label for="image"><?php _ex('Image', 'Taxonomy Image'); ?></label></th>
 			<td>
-			<?php  if( has_term_thumbnail($term_id) ) : ?>
+			<?php  if( has_term_thumbnail($term_id, $taxonomy) ) : ?>
 				
 			<div id="term_thumbnail">
 				<p class="description"><?php printf( __( 'You already have an image defined. You can delete it or replace. To keep it, ignore the following fields.' ), $upload_size_unit, $sizes[$u] ); ?></p>
@@ -576,6 +768,13 @@ th#image {width: 55px}
 		<?php
 	}
 	
+	/**
+	 * Process the thumbnial upload
+	 * Runs on the edited_$taxonomy action hook
+	 * @param int $term_id
+	 * @param int $tt_id
+	 * @return stdClass|boolean:
+	 */
 	public function process_upload ( $term_id, $tt_id ) {
 
 		// get the taxonomy and check that it supports images
@@ -658,23 +857,40 @@ th#image {width: 55px}
 		$file_infos ['infos'] = getimagesize($new_file);
 		$file_infos ['thumbnails'] = array();		
 
-		self::update_term_image_infos($term_id, $file_infos);
+		self::update_term_image_infos($term_id, $taxonomy, $file_infos);
 
 	}
 	
+	/**
+	 * Denerates the thumbnails of a saved term
+	 * Runs on the edited_$taxonomy action hook
+	 * @param unknown_type $term_id
+	 * @param unknown_type $tt_id
+	 */
 	public function generate_thumbnails_action ($term_id, $tt_id) {
 		
-		$taxonomy = !empty($_POST['taxonomy']) ? $_POST['taxonomy'] : '';
+		$taxonomy = !empty($_POST['taxonomy']) ? $_POST['taxonomy'] : 'category';
 		
 		if( ! self::has_support($taxonomy) ) return;
 		
 		self::generate_thumbnails($term_id, $taxonomy);
 	}
 	
+	/**
+	 * Remove term image on deletetion of that term
+	 * Runs on the delete_term action hook
+	 * @param int $term
+	 * @param int $tt_id
+	 * @param string $taxonomy
+	 */
 	public function delete_term ( $term, $tt_id, $taxonomy ) {
 		self::remove_term_image($term, $taxonomy);
 	}
 	
+	/**
+	 * Adds a new column to taxonomies supporting thumbnails
+	 * Runs on the manage_edit-{$taxonomy}_columns action hook
+	 */
 	public function edit_columns ($columns) {
 	    unset( $columns["cb"] );
 	    
@@ -688,6 +904,10 @@ th#image {width: 55px}
 	    return $columns;
 	}
 	
+	/**
+	 * Handles the thumbnial column content
+	 * Runs on the manage_{$taxonomy}_columns action hook
+	 */
 	public function columns ($null, $column_name, $term_id) {
 		
 		$taxonomy = isset( $_GET['taxonomy'] ) ? $_GET['taxonomy'] : '';
@@ -703,20 +923,26 @@ th#image {width: 55px}
 		return '';
 	}
 	
+	/**
+	 * Handles httpr term image deletion
+	 * Runs on the wp_ajax_delete_term_image action hook
+	 */
 	public function ajax_delete_term_image () {
 
 		$term_id = isset($_POST['term_id']) && (int) $_POST['term_id'] ? (int) $_POST['term_id'] : '';
+		$taxonomy = isset($_POST['taxonomy']) && $_POST['taxonomy'] ? $_POST['taxonomy'] : '';
+		
+		if( ! get_taxonomy($taxonomy) ) die(0);
 		
 		if( ! $term_id || ! wp_verify_nonce( $_POST['_nonce'], 'delete_term_image') ) die(0);
 		
-		self::remove_term_image($term_id);
+		self::remove_term_image($term_id, $taxonomy);
 		
 		die('1');		
 	}	
 	
 	/**
-	 * Handle upload errors
-	 *
+	 * Handles upload errors
 	 * @param array $file
 	 * @param $message $message
 	 */
@@ -729,61 +955,118 @@ th#image {width: 55px}
 }
 
 if( ! function_exists('add_term_thumbnails_support') ) {
+	/**
+	 * Adds thumbnails support for the provided taxonomy
+	 * @param string $taxonomy
+	 */
 	function add_term_thumbnails_support ($taxonomy) {
 		Gecka_Terms_Thumbnails::add_taxonomy_support($taxonomy);
 	} 
 }
 
 if( ! function_exists('remove_term_thumbnails_support') ) {
+	/**
+	 * Removes thumbnails support for the provided taxonomy
+	 * @param string $taxonomy
+	 */
 	function remove_term_thumbnails_support ($taxonomy) {
 		Gecka_Terms_Thumbnails::remove_taxonomy_support($taxonomy);
 	} 
 }
 
 if( ! function_exists('has_term_thumbnails_support') ) {
+	/**
+	 * Checks if the provided taxonomy has thumbnails support
+	 * @param string $taxonomy
+	 * @return bool true if the taxonomy has thumbnial support, false otherwise
+	 */
 	function has_term_thumbnails_support ($taxonomy) {
 		return Gecka_Terms_Thumbnails::has_support($taxonomy);
 	} 
 }
 
 if( ! function_exists('add_term_image_size') ) {
+	/**
+	 * Adds a term image size
+	 * @param string $name the thumbnail size name for reference
+	 * @param unknown_type $width 
+	 * @param unknown_type $height
+	 * @param unknown_type $crop
+	 */
 	function add_term_image_size ( $name, $width = 0, $height = 0, $crop = false ) {
 		return Gecka_Terms_Thumbnails::add_image_size ( $name, $width, $height, $crop );
 	} 
 }
 
 if( ! function_exists('set_term_thumbnail') ) {
+	/**
+	 * Sets the default thumbnail size
+	 * @param unknown_type $width
+	 * @param unknown_type $height
+	 * @param unknown_type $crop
+	 */
 	function set_term_thumbnail ( $width = 0, $height = 0, $crop = false ) {
 		return Gecka_Terms_Thumbnails::set_thumbnail( $width, $height, $crop );
 	} 
 }
 
 if( ! function_exists('has_term_thumbnail') ) {
-	function has_term_thumbnail ( $term_id, $size=null ) {
-		return Gecka_Terms_Thumbnails::has_term_thumbnail( $term_id, $size=null );	
+	/**
+	 * Checks if the secified term has a thumbnail image for the specified taxonomy and size
+	 * @param int $term_id the term ID
+	 * @param string $taxonomy the taxonomy name 
+	 * @param string $size the thumbnail size
+	 */
+	function has_term_thumbnail ( $term_id, $taxonomy, $size=null ) {
+		return Gecka_Terms_Thumbnails::has_term_thumbnail( $term_id, $taxonomy, $size=null );	
 	}
 }
 
 if( ! function_exists('the_term_thumbnail') ) {
+	/**
+	 * Prints the specified term's thumbnail HTML code for the specified taxonomy and size
+	 * @param int $term_id the term ID
+	 * @param string $taxonomy the taxonomy name
+	 * @param string $size the thumbnail size
+	 * @param array $attr additionnal attributes
+	 */
 	function the_term_thumbnail ( $term_id, $taxonomy, $size = 'thumbnail', $attr = '') {
 		echo Gecka_Terms_Thumbnails::get_the_term_thumbnail( $term_id, $taxonomy, $size, $attr );	
 	}
 }
 
 if( ! function_exists('get_the_term_thumbnail') ) {
+	/**
+	 * Returns the specified term's thumbnail HTML code for the specified taxonomy and size
+	 * @param int $term_id the term ID
+	 * @param string $taxonomy the taxonomy name
+	 * @param string $size the thumbnail size
+	 * @param array $attr additionnal attributes
+	 */
 	function get_the_term_thumbnail ( $term_id, $taxonomy, $size = 'thumbnail', $attr = '' ) {
 		return Gecka_Terms_Thumbnails::get_the_term_thumbnail( $term_id, $taxonomy, $size, $attr );	
 	}
 }
 
 if( ! function_exists('get_term_thumbnail') ) {
+	/**
+	 * Returns the specified term's thumbnail for the specified taxonomy and size
+	 * @param int $term_id the term ID
+	 * @param string $taxonomy the taxonomy name
+	 * @param string $size the thumbnail size
+	 * @param array $attr additionnal attributes
+	 */
 	function get_term_thumbnail ($term_id, $size) {
-		return Gecka_Terms_Thumbnails::get_term_thumbnail($term_id, $size);	
+		return Gecka_Terms_Thumbnails::get_term_thumbnail($term_id, $taxonomy, $size);	
 	}
 }
 
 if ( ! function_exists('wp_list_terms') ) {
-	
+	/**
+	 * Returns an HTML list of terms
+	 * @param array $args
+	 * @return Ambigous <string, boolean, mixed>
+	 */
 	function wp_list_terms ( $args ) {
 		
 		wp_parse_args($args);
@@ -824,7 +1107,7 @@ class Walker_Term extends Walker_Category {
 			$link .= 'title="' . esc_attr( strip_tags( apply_filters( 'category_description', $category->description, $category ) ) ) . '"';
 		$link .= '>';
 
-		if( !empty($args['show_thumbnail']) && has_term_thumbnail($category->term_id, $args['show_thumbnail']) ) {
+		if( !empty($args['show_thumbnail']) && has_term_thumbnail($category->term_id, $category->taxonomy, $args['show_thumbnail']) ) {
 			
 			if( ! empty($args['thumbnail_position']) && $args['thumbnail_position'] === 'inside' ) 
 				$link .= get_the_term_thumbnail($category->term_id, $category->taxonomy, $args['show_thumbnail']);
