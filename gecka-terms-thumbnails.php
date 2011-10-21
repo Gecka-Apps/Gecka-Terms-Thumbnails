@@ -3,7 +3,7 @@
 Plugin Name: Gecka Terms Thumbnails
 Plugin URI: http://gecka-apps.com
 Description: Add thumbnails support to categories and any choosen taxonomies.
-Version: 1.0-beta2
+Version: 1.0-beta3
 Author: Gecka Apps
 Author URI: http://gecka.nc
 Licence: GPL
