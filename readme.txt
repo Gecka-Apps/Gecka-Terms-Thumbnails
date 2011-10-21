@@ -3,7 +3,7 @@ Contributors: Gecka Apps
 Tags: term, terms, category, categories, term image, category image, categories images, taxonomy image, taxoomies images, categories thumbnails, thumbnail
 Requires at least: 3.0
 Tested up to: 3.2
-Stable tag: 1.0-beta3
+Stable tag: 1.0-beta4
 Manage tumbnails for categories, tags or any other taxonomy's terms of your Wordpress website.
 
 == Description ==
@@ -29,6 +29,9 @@ Want to contribute? That plugin is on <a href="https://github.com/Gecka-Apps/Gec
 2. Settings
 
 == Changelog ==
+
+= 1.0-beta4 =
+* Fixes has_term_thumbnail function
 
 = 1.0-beta3 =
 * Support different images for each taxonomy a term appear in
