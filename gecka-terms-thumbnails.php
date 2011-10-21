@@ -1021,7 +1021,7 @@ if( ! function_exists('has_term_thumbnail') ) {
 	 * @param string $size the thumbnail size
 	 */
 	function has_term_thumbnail ( $term_id, $taxonomy, $size=null ) {
-		return Gecka_Terms_Thumbnails::has_term_thumbnail( $term_id, $taxonomy, $size=null );	
+		return Gecka_Terms_Thumbnails::has_term_thumbnail( $term_id, $taxonomy, $size );	
 	}
 }
 
