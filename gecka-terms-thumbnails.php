@@ -27,6 +27,9 @@ Tested up to: 3.2
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+// Load the textdomain
+load_plugin_textdomain('gecka-terms-thumbnails', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
 require_once dirname(__FILE__) . '/settings.php';
 
 $gecka_terms_thumbnails = Gecka_Terms_Thumbnails::instance();
@@ -740,16 +743,16 @@ th#image {width: 55px}
 		
 		?>
 		<tr class="form-field">
-			<th scope="row" valign="top"><label for="image"><?php _ex('Image', 'Taxonomy Image'); ?></label></th>
+			<th scope="row" valign="top"><label for="image"><?php _ex('Image', 'Taxonomy Image', 'gecka-terms-thumbnails'); ?></label></th>
 			<td>
 			<?php  if( has_term_thumbnail($term_id, $taxonomy) ) : ?>
 				
 			<div id="term_thumbnail">
-				<p class="description"><?php printf( __( 'You already have an image defined. You can delete it or replace. To keep it, ignore the following fields.' ), $upload_size_unit, $sizes[$u] ); ?></p>
+				<p class="description"><?php _e( 'You already have an image defined. You can delete it or replace. To keep it, ignore the following fields.', 'gecka-terms-thumbnails' ); ?></p>
 				<br>
 				<?php the_term_thumbnail($term_id, $taxonomy, 'admin-thumbnail', array('style'=>'float:left; border: 1px solid #ccc; margin-right: 10px; padding: 3px; ')); ?>
 				
-				<input type="button" id="delete-thumb-button" value="Delete the current image" class="button-secondary action" style="width: auto">
+				<input type="button" id="delete-thumb-button" value="<?php _e('Delete the current image', 'gecka-terms-thumbnails') ?>" class="button-secondary action" style="width: auto">
 				<br><br>
 			</div>
 			
@@ -787,14 +790,14 @@ th#image {width: 55px}
 		if( ! $file ) return $term;
 
 		/* create the taxonomy directory if needed */
-		if( ! $dir = self::images_mkdir($taxonomy) ) return $this->upload_error( $file, "Permission error creating the terms-images/{taxonomy} folder." );
+		if( ! $dir = self::images_mkdir($taxonomy) ) return $this->upload_error( $file, __("Permission error creating the terms-images/{taxonomy} folder.", 'gecka-terms-thumbnails') );
 
 		// Courtesy of php.net, the strings that describe the error indicated in $_FILES[{form field}]['error'].
 		$upload_error_strings = array( false,
-			__( "The uploaded file exceeds the <code>upload_max_filesize</code> directive in <code>php.ini</code>." ),
-			__( "The uploaded file exceeds the <em>MAX_FILE_SIZE</em> directive that was specified in the HTML form." ),
+			__( "The uploaded file exceeds the <code>upload_max_filesize</code> directive in <code>php.ini</code>."),
+			__( "The uploaded file exceeds the <em>MAX_FILE_SIZE</em> directive that was specified in the HTML form."),
 			__( "The uploaded file was only partially uploaded." ),
-			__( "No file was uploaded." ),
+			__( "No file was uploaded.", 'gecka-terms-thumbnails' ),
 			'',
 			__( "Missing a temporary folder." ),
 			__( "Failed to write file to disk." ),
@@ -823,7 +826,7 @@ th#image {width: 55px}
 		/* delete old image if it exists */
 		if( false === self::remove_term_image($term_id, $taxonomy) )  {
 			@ unlink($new_file);
-			return $this->upload_error($file, __( 'An error occured when trying to remove the old image.', 'gecka-terms-ordering' ));
+			return $this->upload_error($file, __( 'An error occured when trying to remove the old image.', 'gecka-terms-thumbnails' ));
 		}		
 		
 		if ( $proper_filename )

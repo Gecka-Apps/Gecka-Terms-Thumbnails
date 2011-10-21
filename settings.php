@@ -108,7 +108,7 @@ class Gecka_Terms_Thumbnails_Settings {
 		<input name="term_thumbnail_size_h" type="text" id="term_thumbnail_size_h" value="<?php esc_attr_e( $this->term_thumbnail_size_h ); ?>" class="small-text" />
 		<br>
 		<input id="term_thumbnail_crop" type="checkbox" <?php checked( $this->term_thumbnail_crop, 1 ); ?> value="1" name="term_thumbnail_crop">
-		<label for="term_thumbnail_crop"><?php _e('Crop thumbnail to exact dimensions (normally thumbnails are proportional') ?></label>
+		<label for="term_thumbnail_crop"><?php _e('Crop thumbnail to exact dimensions (normally thumbnails are proportional)') ?></label>
 		<?php
 		
 	}
@@ -122,7 +122,7 @@ class Gecka_Terms_Thumbnails_Settings {
 		<input name="term_medium_size_h" type="text" id="term_medium_size_h" value="<?php esc_attr_e( $this->term_medium_size_h ); ?>" class="small-text" />
 		<br>
 		<input id="term_medium_crop" type="checkbox" <?php checked( $this->term_medium_crop, 1 ); ?> value="1" name="term_medium_crop">
-		<label for="term_medium_crop"><?php _e('Crop thumbnail to exact dimensions (normally thumbnails are proportional') ?></label>
+		<label for="term_medium_crop"><?php _e('Crop thumbnail to exact dimensions (normally thumbnails are proportional)') ?></label>
 		<?php
 		
 	}
