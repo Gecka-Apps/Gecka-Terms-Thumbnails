@@ -1,0 +1,141 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Gecka Terms Thumbnails\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-10-21 12:47+1100\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Laurent Dinclaux <lox@knc.nc>\n"
+"Language-Team: Gecka Apps <contact@gecka-apps.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-KeywordsList: __;_e;__ngettext:1,2;_n:1,2;__ngettext_noop:1,2;_n_noop:1,2;_c,_nc:4c,1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2\n"
+"X-Poedit-Basepath: ..\n"
+"X-Textdomain-Support: yes\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: gecka-terms-thumbnails.php:505
+msgid "Could not create directory."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:687
+msgid "Image upload error: "
+msgstr ""
+
+#: gecka-terms-thumbnails.php:716
+#: gecka-terms-thumbnails.php:902
+msgid "Image"
+msgstr ""
+
+#: gecka-terms-thumbnails.php:718
+msgid "Once you have added this new term, edit it to set its image."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:746
+msgctxt "Taxonomy Image"
+msgid "Image"
+msgstr ""
+
+#: gecka-terms-thumbnails.php:751
+msgid "You already have an image defined. You can delete it or replace. To keep it, ignore the following fields."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:755
+msgid "Delete the current image"
+msgstr ""
+
+#: gecka-terms-thumbnails.php:763
+#, php-format
+msgid "Maximum upload file size: %d%s"
+msgstr ""
+
+#: gecka-terms-thumbnails.php:793
+msgid "Permission error creating the terms-images/{taxonomy} folder."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:797
+msgid "The uploaded file exceeds the <code>upload_max_filesize</code> directive in <code>php.ini</code>."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:798
+msgid "The uploaded file exceeds the <em>MAX_FILE_SIZE</em> directive that was specified in the HTML form."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:799
+msgid "The uploaded file was only partially uploaded."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:800
+msgid "No file was uploaded."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:802
+msgid "Missing a temporary folder."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:803
+msgid "Failed to write file to disk."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:804
+msgid "File upload stopped by extension."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:817
+msgid "Specified file failed upload test."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:824
+msgid "Sorry, this file type is not permitted for security reasons."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:829
+msgid "An error occured when trying to remove the old image."
+msgstr ""
+
+#: gecka-terms-thumbnails.php:1108
+#, php-format
+msgid "View all posts filed under %s"
+msgstr ""
+
+#: gecka-terms-thumbnails.php:1133
+#, php-format
+msgid "Feed for all posts filed under %s"
+msgstr ""
+
+#: settings.php:75
+msgid "Term image max size"
+msgstr ""
+
+#: settings.php:80
+msgid "Term thumbnail max size"
+msgstr ""
+
+#: settings.php:85
+msgid "Term medium thumbnail max size"
+msgstr ""
+
+#: settings.php:92
+#: settings.php:105
+#: settings.php:119
+msgid "Max Width"
+msgstr ""
+
+#: settings.php:94
+#: settings.php:107
+#: settings.php:121
+msgid "Max Height"
+msgstr ""
+
+#: settings.php:97
+msgid "If one is set, any uploaded original term image will be proportionally resized to this max width."
+msgstr ""
+
+#: settings.php:111
+#: settings.php:125
+msgid "Crop thumbnail to exact dimensions (normally thumbnails are proportional)"
+msgstr ""
+
