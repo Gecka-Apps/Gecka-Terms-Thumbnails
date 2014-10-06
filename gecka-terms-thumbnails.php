@@ -526,7 +526,7 @@ class Gecka_Terms_Thumbnails {
 	    global $wpdb;
 	    
 	    $collate = '';
-	    if($wpdb->supports_collation()) {
+	    if( $wpdb->has_cap( 'collation' ) ) {
 			if(!empty($wpdb->charset)) $collate = "DEFAULT CHARACTER SET $wpdb->charset";
 			if(!empty($wpdb->collate)) $collate .= " COLLATE $wpdb->collate";
 	    }
